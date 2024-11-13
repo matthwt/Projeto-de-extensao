@@ -1,0 +1,71 @@
+import sqlite3
+
+class SnackShopApp:
+    def __init__(self):
+        # Conectar ao banco de dados em memória
+        self.conn = sqlite3.connect(":memory:")
+        self.cursor = self.conn.cursor()
+        # Criar a tabela de produtos
+        self.cursor.execute('''CREATE TABLE products (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                name TEXT NOT NULL,
+                                price REAL NOT NULL,
+                                description TEXT
+                              )''')
+        self.conn.commit()
+
+    def add_product(self):
+        name = input("Digite o nome do produto: ")
+        price = float(input("Digite o preço do produto: R$"))
+        description = input("Digite a descrição do produto (opcional): ")
+
+        self.cursor.execute("INSERT INTO products (name, price, description) VALUES (?, ?, ?)",
+                            (name, price, description))
+        self.conn.commit()
+        print("Produto adicionado com sucesso!")
+
+    def view_products(self):
+        self.cursor.execute("SELECT * FROM products")
+        products = self.cursor.fetchall()
+        if not products:
+            print("Nenhum produto cadastrado.")
+        else:
+            for product in products:
+                print(f"ID: {product[0]}, Nome: {product[1]}, Preço: R${product[2]:.2f}, Descrição: {product[3]}")
+
+    def remove_product(self):
+        self.view_products()
+        if self.cursor.execute("SELECT COUNT(*) FROM products").fetchone()[0] > 0:
+            product_id = int(input("Digite o ID do produto que deseja remover: "))
+            self.cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
+            self.conn.commit()
+            print("Produto removido com sucesso!")
+
+    def run(self):
+        while True:
+            print("\n1. Adicionar Produto")
+            print("2. Visualizar Produtos")
+            print("3. Remover Produto")
+            print("4. Sair")
+            choice = input("Escolha uma opção: ")
+
+            if choice == "1":
+                self.add_product()
+            elif choice == "2":
+                self.view_products()
+            elif choice == "3":
+                self.remove_product()
+            elif choice == "4":
+                print("Saindo do sistema.")
+                break
+            else:
+                print("Opção inválida. Tente novamente.")
+
+    def __del__(self):
+        # Fecha a conexão ao encerrar o app
+        self.conn.close()
+
+
+if __name__ == "__main__":
+    app = SnackShopApp()
+    app.run()
